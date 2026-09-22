@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Depois de publicar, informe o endereço do sitemap, por exemplo:
+# Sitemap: https://SEU-USUARIO.github.io/SEU-REPOSITORIO/sitemap.xml

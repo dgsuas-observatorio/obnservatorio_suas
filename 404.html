@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Página não encontrada | Observatório SUAS — Porto Velho</title>
+  <link rel="icon" href="assets/img/favicon.ico" sizes="any">
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: #101d35; text-align: center; background-color: #eceff5;
+    }
+    body::before {
+      content: ""; position: fixed; inset: -10%; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(38vmax 30vmax at 4% -4%, rgba(35,88,184,.30), transparent 62%),
+        radial-gradient(34vmax 28vmax at 98% 2%, rgba(255,210,0,.26), transparent 62%),
+        radial-gradient(40vmax 34vmax at 88% 96%, rgba(92,184,90,.28), transparent 64%);
+    }
+    main {
+      position: relative; z-index: 1; max-width: 480px; padding: 44px 36px;
+      border: 1px solid rgba(255,255,255,.86); border-radius: 30px;
+      background: linear-gradient(152deg, rgba(255,255,255,.8), rgba(255,255,255,.56));
+      -webkit-backdrop-filter: blur(24px) saturate(185%); backdrop-filter: blur(24px) saturate(185%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 32px 70px -28px rgba(16,29,53,.38);
+    }
+    .codigo {
+      margin: 0; font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: -.05em;
+      background: linear-gradient(140deg, #1c4b9e, #5cb85a 70%, #ffd200);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    h1 { margin: 14px 0 10px; font-size: 23px; letter-spacing: -.02em; }
+    p { margin: 0 0 24px; color: #42526e; line-height: 1.6; font-size: 14.5px; }
+    a {
+      display: inline-block; padding: 14px 26px; border-radius: 999px;
+      background: linear-gradient(140deg, #2358b8, #163a7d); color: #fff;
+      font-weight: 600; text-decoration: none;
+      box-shadow: 0 10px 28px -12px rgba(28,75,158,.55);
+    }
+    a:focus-visible { outline: 3px solid #101d35; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="codigo" aria-hidden="true">404</p>
+    <h1>Página não encontrada</h1>
+    <p>Este endereço não existe no Observatório SUAS. Você será levado à página inicial em alguns segundos.</p>
+    <a id="inicio" href="/">Ir para a página inicial</a>
+  </main>
+  <script>
+    // Em sites de projeto do GitHub Pages (usuario.github.io/repositorio/), a raiz é a 1ª pasta.
+    (function () {
+      var partes = location.pathname.split('/').filter(Boolean);
+      var base = /\.github\.io$/.test(location.hostname) && partes.length ? '/' + partes[0] + '/' : '/';
+      if (location.pathname.replace(/\/?$/, '/') === base) base = '/';
+      document.getElementById('inicio').href = base;
+      setTimeout(function () { location.replace(base); }, 6000);
+    })();
+  </script>
+</body>
+</html>
