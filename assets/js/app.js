@@ -3,18 +3,32 @@
    --------------------------------------------------------------------------
    JavaScript puro, sem dependências. Responsável por:
      · ler e validar o catálogo (assets/js/catalogo.js);
-     · montar mega-menu, gaveta, cartões da página inicial e filtros;
+     · normalizar os links do Tableau (link do perfil, /views/ ou <iframe>);
+     · montar mega-menu, gaveta, cartões e filtros da página inicial;
      · rotear por endereço (#/tema/painel) com links compartilháveis;
-     · carregar os painéis do Power BI com cache, estados e tela cheia;
+     · carregar os painéis com cache, estados de espera e tela cheia;
      · paleta de comandos (Ctrl/⌘ + K) com busca e navegação por teclado.
    ========================================================================== */
 (function () {
   "use strict";
 
   /* ---------- Ajustes ---------------------------------------------------- */
-  var MAX_PAINEIS_EM_CACHE = 3;      // iframes mantidos em memória
-  var ESPERA_AVISO = 9000;           // ms até avisar que está demorando
-  var HOSTS_PERMITIDOS = ["app.powerbi.com"];
+  var MAX_PAINEIS_EM_CACHE = 3;   // iframes mantidos em memória
+  var ESPERA_AVISO = 9000;        // ms até avisar que está demorando
+
+  /* Domínios aceitos para os painéis. Para liberar outro, inclua aqui E em
+     frame-src no <meta Content-Security-Policy> do index.html. */
+  function hostPermitido(host) {
+    return host === "public.tableau.com" || /\.tableau\.com$/.test(host);
+  }
+
+  /* Parâmetros que fazem a viz abrir embutida, sem a página do Tableau. */
+  var PARAMS_EMBED = {
+    ":embed": "y",
+    ":showVizHome": "no",
+    ":display_count": "n",
+    ":origin": "viz_share_link"
+  };
 
   /* ---------- Atalhos ---------------------------------------------------- */
   var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
@@ -28,22 +42,21 @@
     erro: $("#vista-nao-encontrado")
   };
 
+  var CONFIG = window.OBSERVATORIO || {};
+
   /* ---------- Utilidades ------------------------------------------------- */
   function semAcento(txt) {
     return String(txt || "").normalize("NFD").replace(/[̀-ͯ]/g, "");
   }
 
   function apelido(txt) {
-    return semAcento(txt)
-      .toLowerCase()
+    return semAcento(txt).toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 60);
   }
 
-  function normaliza(txt) {
-    return semAcento(txt).toLowerCase();
-  }
+  function normaliza(txt) { return semAcento(txt).toLowerCase(); }
 
   function escapaHTML(txt) {
     return String(txt).replace(/[&<>"']/g, function (c) {
@@ -57,27 +70,65 @@
 
   function plural(n, um, muitos) { return n + " " + (n === 1 ? um : muitos); }
 
-  /* Aceita a URL pura ou o <iframe> inteiro copiado do Power BI. */
+  /* --- Link do Tableau -------------------------------------------------- *
+     Aceita, e converte para um endereço que abre embutido:
+       · o <iframe> inteiro copiado do "Incorporar";
+       · https://public.tableau.com/app/profile/PERFIL/viz/Pasta/Folha
+       · https://public.tableau.com/views/Pasta/Folha?:embed=y
+       · endereços de Tableau Cloud / Server (*.tableau.com)
+     Devolve "" para qualquer coisa fora desses domínios.                    */
   function limpaURL(valor) {
     if (!valor) return "";
     var texto = String(valor).trim();
+
     var achado = texto.match(/src\s*=\s*["']([^"']+)["']/i);
     if (achado) texto = achado[1];
     texto = texto.replace(/&amp;/g, "&");
-    try {
-      var u = new URL(texto);
-      if (u.protocol !== "https:") return "";
-      if (HOSTS_PERMITIDOS.indexOf(u.hostname) === -1) return "";
-      return u.href;
-    } catch (e) {
+
+    var u;
+    try { u = new URL(texto); } catch (e) { return ""; }
+    if (u.protocol !== "https:" || !hostPermitido(u.hostname)) {
+      console.warn("[Observatório SUAS] Link recusado (só são aceitos endereços https do Tableau):", texto);
       return "";
     }
+
+    // Link de perfil do Tableau Public → endereço de visualização
+    var perfil = u.pathname.match(/\/app\/profile\/[^/]+\/viz\/([^/]+)\/([^/?#]+)/);
+    if (perfil) u.pathname = "/views/" + perfil[1] + "/" + perfil[2];
+
+    /* Os parâmetros do Tableau começam com ":" e precisam ficar literais —
+       por isso a query é montada à mão, sem URLSearchParams. */
+    var consulta = u.search.replace(/^\?/, "");
+    var jaTem = consulta.split("&").map(function (par) {
+      return decodeURIComponent(par.split("=")[0]);
+    });
+    Object.keys(PARAMS_EMBED).forEach(function (chave) {
+      if (jaTem.indexOf(chave) === -1) {
+        consulta += (consulta ? "&" : "") + chave + "=" + PARAMS_EMBED[chave];
+      }
+    });
+    u.search = consulta ? "?" + consulta : "";
+
+    return u.href;
+  }
+
+  /* Endereço para abrir em nova aba: sem os parâmetros de embutir. */
+  function urlNavegavel(url) {
+    if (!url) return "";
+    try {
+      var u = new URL(url);
+      var restante = u.search.replace(/^\?/, "").split("&").filter(function (par) {
+        return par && !PARAMS_EMBED.hasOwnProperty(decodeURIComponent(par.split("=")[0]));
+      });
+      u.search = restante.length ? "?" + restante.join("&") : "";
+      return u.href;
+    } catch (e) { return url; }
   }
 
   /* ---------- Catálogo --------------------------------------------------- */
   var temas = [];
-  var indice = [];      // busca: temas + painéis
-  var porRota = {};     // "tema/painel" -> { tema, painel }
+  var indice = [];
+  var porRota = {};
 
   function prepararCatalogo() {
     var bruto = Array.isArray(window.CATALOGO) ? window.CATALOGO : [];
@@ -98,7 +149,6 @@
           slug: ps,
           url: limpaURL(p.url),
           rota: slug + "/" + ps,
-          temaSlug: slug,
           indice: j + 1
         };
       });
@@ -115,10 +165,18 @@
     }).filter(function (t) { return t.paineis.length > 0; });
 
     temas.forEach(function (t) {
-      indice.push({ tipo: "tema", titulo: t.titulo, caminho: plural(t.paineis.length, "painel", "painéis"), rota: t.paineis[0].rota, icone: t.icone, busca: normaliza(t.titulo + " " + t.eixo + " " + t.descricao) });
+      indice.push({
+        tipo: "tema", titulo: t.titulo, icone: t.icone, rota: t.paineis[0].rota,
+        caminho: plural(t.paineis.length, "painel", "painéis"),
+        busca: normaliza(t.titulo + " " + t.eixo + " " + t.descricao)
+      });
       t.paineis.forEach(function (p) {
         porRota[p.rota] = { tema: t, painel: p };
-        indice.push({ tipo: "painel", titulo: p.titulo, caminho: t.titulo, rota: p.rota, icone: t.icone, busca: normaliza(p.titulo + " " + t.titulo + " " + t.eixo) });
+        indice.push({
+          tipo: "painel", titulo: p.titulo, icone: t.icone, rota: p.rota,
+          caminho: t.titulo,
+          busca: normaliza(p.titulo + " " + t.titulo + " " + t.eixo)
+        });
       });
     });
   }
@@ -126,24 +184,46 @@
   /* ---------- Página inicial --------------------------------------------- */
   var eixoAtivo = "todos";
 
-  function montarIndicadores() {
-    var totalPaineis = temas.reduce(function (s, t) { return s + t.paineis.length; }, 0);
+  function montarNumeros() {
+    var total = 0, publicados = 0;
+    temas.forEach(function (t) {
+      total += t.paineis.length;
+      t.paineis.forEach(function (p) { if (p.url) publicados++; });
+    });
+
     animarNumero($("#total-temas"), temas.length);
-    animarNumero($("#total-paineis"), totalPaineis);
+    animarNumero($("#total-paineis"), total);
+
+    var nota = $("#nota-paineis");
+    if (nota) nota.textContent = publicados ? publicados + " já publicados" : "previstos no Tableau";
+
     var ano = $("#ano-atual");
     if (ano) ano.textContent = new Date().getFullYear();
+
+    var selo = $("#selo-atualizacao");
+    if (selo && CONFIG.atualizadoEm) selo.textContent = "Atualizado em " + CONFIG.atualizadoEm;
+
+    if (CONFIG.contato) {
+      var rodape = $("#rodape-rodape");
+      if (rodape) {
+        var eh = /@/.test(CONFIG.contato);
+        rodape.insertAdjacentHTML("beforebegin",
+          "Dúvidas e pedidos de dados: " +
+          (eh ? '<a href="mailto:' + escapaHTML(CONFIG.contato) + '">' + escapaHTML(CONFIG.contato) + "</a>"
+              : escapaHTML(CONFIG.contato)) + ".<br>");
+      }
+    }
   }
 
   function animarNumero(el, alvo) {
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = alvo; return; }
     var inicio = performance.now(), dur = 900;
-    function passo(agora) {
+    (function passo(agora) {
       var t = Math.min(1, (agora - inicio) / dur);
       el.textContent = Math.round(alvo * (1 - Math.pow(1 - t, 3)));
       if (t < 1) requestAnimationFrame(passo);
-    }
-    requestAnimationFrame(passo);
+    })(performance.now());
   }
 
   function montarFiltros() {
@@ -152,9 +232,9 @@
     var eixos = [];
     temas.forEach(function (t) { if (eixos.indexOf(t.eixo) === -1) eixos.push(t.eixo); });
 
-    caixa.innerHTML = ['todos'].concat(eixos).map(function (e) {
-      var rotulo = e === "todos" ? "Todos" : e;
-      return '<button class="filtro" type="button" data-eixo="' + escapaHTML(e) + '" aria-pressed="' + (e === eixoAtivo) + '">' + escapaHTML(rotulo) + "</button>";
+    caixa.innerHTML = ["todos"].concat(eixos).map(function (e) {
+      return '<button class="filtro" type="button" data-eixo="' + escapaHTML(e) + '" aria-pressed="' +
+        (e === eixoAtivo) + '">' + escapaHTML(e === "todos" ? "Todos" : e) + "</button>";
     }).join("");
 
     caixa.addEventListener("click", function (ev) {
@@ -179,11 +259,13 @@
       var restantes = t.paineis.length - visiveis.length;
 
       var itens = visiveis.map(function (p) {
-        return '<li><a class="cartao__link" href="#/' + p.rota + '"><span>' + escapaHTML(p.titulo) + "</span>" + icone("i-seta-direita") + "</a></li>";
+        return '<li><a class="cartao__link" href="#/' + p.rota + '"><span>' +
+          escapaHTML(p.titulo) + "</span>" + icone("i-seta-direita") + "</a></li>";
       }).join("");
 
       if (restantes > 0) {
-        itens += '<li><a class="cartao__link cartao__mais" href="#/' + t.paineis[visiveis.length].rota + '">+ ' + plural(restantes, "painel", "painéis") + " neste tema</a></li>";
+        itens += '<li><a class="cartao__link cartao__mais" href="#/' + t.paineis[visiveis.length].rota +
+          '">+ ' + plural(restantes, "painel", "painéis") + " neste tema</a></li>";
       }
 
       return '<li class="cartao cartao--' + t.cor + ' vidro">' +
@@ -191,7 +273,8 @@
           '<span class="cartao__icone">' + icone(t.icone) + "</span>" +
           '<div class="cartao__cabecalho">' +
             '<h3 class="cartao__titulo">' + escapaHTML(t.titulo) + "</h3>" +
-            '<p class="cartao__meta"><b>' + t.paineis.length + "</b> " + (t.paineis.length === 1 ? "painel" : "painéis") + " · " + escapaHTML(t.eixo) + "</p>" +
+            '<p class="cartao__meta"><b>' + t.paineis.length + "</b> " +
+              (t.paineis.length === 1 ? "painel" : "painéis") + " · " + escapaHTML(t.eixo) + "</p>" +
           "</div>" +
           '<span class="cartao__numero">' + String(i + 1).padStart(2, "0") + "</span>" +
         "</div>" +
@@ -201,9 +284,10 @@
     }).join("");
   }
 
-  /* ---------- Mega-menu e gaveta ----------------------------------------- */
-  function itemDeMenu(t, classe) {
-    return '<li><a class="' + classe + " " + classe + "--" + t.cor + '" href="#/' + t.paineis[0].rota + '" data-tema="' + t.slug + '">' +
+  /* ---------- Menus ------------------------------------------------------ */
+  function itemDeMenu(t) {
+    return '<li><a class="mega__item mega__item--' + t.cor + '" href="#/' + t.paineis[0].rota +
+      '" data-tema="' + t.slug + '">' +
       '<span class="mega__icone">' + icone(t.icone) + "</span>" +
       '<span class="mega__texto">' +
         '<span class="mega__titulo">' + escapaHTML(t.titulo) + "</span>" +
@@ -212,11 +296,11 @@
   }
 
   function montarMenus() {
+    var html = temas.map(itemDeMenu).join("");
     var mega = $("#mega-grade");
-    var gaveta = $("#gaveta-lista");
-    var html = temas.map(function (t) { return itemDeMenu(t, "mega__item"); }).join("");
+    var gav = $("#gaveta-lista");
     if (mega) mega.innerHTML = html;
-    if (gaveta) gaveta.innerHTML = html;
+    if (gav) gav.innerHTML = html;
   }
 
   var botaoMega = $("#botao-mega");
@@ -228,16 +312,16 @@
     botaoMega.setAttribute("aria-expanded", String(abrir));
   }
 
-  if (botaoMega) {
-    botaoMega.addEventListener("click", function () {
-      abrirMega(mega.hidden);
-    });
-  }
+  if (botaoMega) botaoMega.addEventListener("click", function () { abrirMega(mega.hidden); });
+
+  // Clicar num tema fecha o mega-menu mesmo quando a rota não muda.
+  if (mega) mega.addEventListener("click", function (ev) { if (ev.target.closest("a")) abrirMega(false); });
 
   document.addEventListener("click", function (ev) {
     if (mega && !mega.hidden && !ev.target.closest("#mega") && !ev.target.closest("#botao-mega")) abrirMega(false);
   });
 
+  /* ---------- Gaveta (mobile) -------------------------------------------- */
   var gaveta = $("#gaveta");
   var scrim = $("#scrim");
   var botaoGaveta = $("#botao-gaveta");
@@ -249,17 +333,32 @@
     botaoGaveta.setAttribute("aria-expanded", String(abrir));
     document.body.style.touchAction = abrir ? "none" : "";
     if (abrir) {
-      var primeiro = $("a", gaveta);
+      var primeiro = $("a", gaveta) || $("#fechar-gaveta");
       if (primeiro) primeiro.focus();
     }
   }
 
   if (botaoGaveta) botaoGaveta.addEventListener("click", function () { abrirGaveta(gaveta.hidden); });
-  if (scrim) scrim.addEventListener("click", function () { abrirGaveta(false); });
+  if (scrim) scrim.addEventListener("click", function () { abrirGaveta(false); botaoGaveta.focus(); });
   var fecharGaveta = $("#fechar-gaveta");
   if (fecharGaveta) fecharGaveta.addEventListener("click", function () { abrirGaveta(false); botaoGaveta.focus(); });
+  if (gaveta) gaveta.addEventListener("click", function (ev) { if (ev.target.closest("a")) abrirGaveta(false); });
 
-  /* ---------- Paleta de comandos (Ctrl/⌘ + K) ---------------------------- */
+  /* Mantém o Tab dentro do diálogo aberto (gaveta ou paleta). */
+  function prenderFoco(ev) {
+    if (ev.key !== "Tab") return;
+    var caixa = (paleta && !paleta.hidden) ? paleta : (gaveta && !gaveta.hidden ? gaveta : null);
+    if (!caixa) return;
+    var focaveis = $$('a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])', caixa)
+      .filter(function (el) { return el.offsetParent !== null; });
+    if (!focaveis.length) return;
+    var primeiro = focaveis[0], ultimo = focaveis[focaveis.length - 1];
+    if (ev.shiftKey && document.activeElement === primeiro) { ev.preventDefault(); ultimo.focus(); }
+    else if (!ev.shiftKey && document.activeElement === ultimo) { ev.preventDefault(); primeiro.focus(); }
+  }
+  document.addEventListener("keydown", prenderFoco);
+
+  /* ---------- Paleta de comandos ----------------------------------------- */
   var paleta = $("#paleta");
   var campo = $("#paleta-campo");
   var resultados = $("#paleta-resultados");
@@ -289,8 +388,7 @@
       : indice.filter(function (i) { return i.busca.indexOf(t) !== -1; })
               .sort(function (a, b) {
                 var g = (a.tipo === "tema" ? 0 : 1) - (b.tipo === "tema" ? 0 : 1);
-                if (g !== 0) return g;                       // temas primeiro, grupos estáveis
-                return a.busca.indexOf(t) - b.busca.indexOf(t);
+                return g !== 0 ? g : a.busca.indexOf(t) - b.busca.indexOf(t);
               })
               .slice(0, 40);
 
@@ -299,17 +397,17 @@
 
     var grupoAtual = "";
     resultados.innerHTML = listaAtual.map(function (item, i) {
-      var cabecalho = "";
       var grupo = item.tipo === "tema" ? "Temas" : "Painéis";
+      var cabecalho = "";
       if (grupo !== grupoAtual) { grupoAtual = grupo; cabecalho = '<li class="paleta__grupo" role="presentation">' + grupo + "</li>"; }
       return cabecalho +
-        '<li role="presentation"><a class="paleta__item' + (i === 0 ? " is-ativo" : "") + '" role="option" aria-selected="' + (i === 0) + '" id="paleta-op-' + i + '" href="#/' + item.rota + '" data-i="' + i + '">' +
+        '<li role="presentation"><a class="paleta__item' + (i === 0 ? " is-ativo" : "") +
+          '" role="option" aria-selected="' + (i === 0) + '" id="paleta-op-' + i + '" href="#/' + item.rota + '">' +
           '<span class="paleta__item-icone">' + icone(item.icone) + "</span>" +
           '<span class="paleta__item-texto">' +
             '<span class="paleta__item-titulo">' + destacar(item.titulo, termo.trim()) + "</span>" +
             '<span class="paleta__item-caminho">' + escapaHTML(item.caminho) + "</span>" +
-          "</span>" +
-          icone("i-enter", "paleta__seta") +
+          "</span>" + icone("i-enter", "paleta__seta") +
         "</a></li>";
     }).join("");
   }
@@ -318,7 +416,8 @@
     if (!termo) return escapaHTML(texto);
     var pos = normaliza(texto).indexOf(normaliza(termo));
     if (pos === -1) return escapaHTML(texto);
-    return escapaHTML(texto.slice(0, pos)) + "<mark>" + escapaHTML(texto.slice(pos, pos + termo.length)) + "</mark>" + escapaHTML(texto.slice(pos + termo.length));
+    return escapaHTML(texto.slice(0, pos)) + "<mark>" + escapaHTML(texto.slice(pos, pos + termo.length)) +
+           "</mark>" + escapaHTML(texto.slice(pos + termo.length));
   }
 
   function moverSelecao(passo) {
@@ -343,22 +442,18 @@
         if (alvo) { ev.preventDefault(); location.hash = alvo.getAttribute("href").slice(1); abrirPaleta(false); }
       }
     });
-    resultados.addEventListener("click", function (ev) {
-      if (ev.target.closest(".paleta__item")) abrirPaleta(false);
-    });
-    paleta.addEventListener("mousedown", function (ev) {
-      if (ev.target === paleta) abrirPaleta(false);
-    });
+    resultados.addEventListener("click", function (ev) { if (ev.target.closest(".paleta__item")) abrirPaleta(false); });
+    paleta.addEventListener("mousedown", function (ev) { if (ev.target === paleta) abrirPaleta(false); });
   }
 
-  $$("#abrir-paleta, #heroi-buscar, #paleta-fechar").forEach(function (b) {
+  $$("#abrir-paleta, #abertura-buscar, #paleta-fechar").forEach(function (b) {
     b.addEventListener("click", function () { abrirPaleta(b.id !== "paleta-fechar"); });
   });
 
   document.addEventListener("keydown", function (ev) {
     var k = ev.key.toLowerCase();
     if ((ev.ctrlKey || ev.metaKey) && k === "k") { ev.preventDefault(); abrirPaleta(paleta.hidden); return; }
-    if (k === "/" && !/^(input|textarea|select)$/i.test(document.activeElement.tagName) && paleta.hidden) {
+    if (k === "/" && paleta.hidden && !/^(input|textarea|select)$/i.test(document.activeElement.tagName)) {
       ev.preventDefault(); abrirPaleta(true); return;
     }
     if (ev.key === "Escape") {
@@ -373,8 +468,8 @@
   var carregando = $("#carregando");
   var avisoLentidao = $("#aviso-lentidao");
   var pendente = $("#pendente");
-  var cache = {};       // rota -> iframe
-  var ordem = [];       // rotas em ordem de uso
+  var cache = {};
+  var ordem = [];
   var temporizador = null;
   var rotaAtual = "";
 
@@ -420,10 +515,9 @@
     }, ESPERA_AVISO);
   }
 
-  /* ---------- Montagem da vista de painel -------------------------------- */
+  /* ---------- Vista de painel -------------------------------------------- */
   function montarMigalhas(tema, painel) {
-    var ol = $("#migalhas ol");
-    ol.innerHTML =
+    $("#migalhas ol").innerHTML =
       '<li class="migalhas__item"><a href="#/">Início</a></li>' +
       '<li class="migalhas__item"><a href="#/' + tema.paineis[0].rota + '">' + escapaHTML(tema.titulo) + "</a></li>" +
       '<li class="migalhas__item" aria-current="page">' + escapaHTML(painel.titulo) + "</li>";
@@ -434,8 +528,7 @@
     if (tema.paineis.length < 2) { abas.hidden = true; abas.innerHTML = ""; return; }
     abas.hidden = false;
     abas.innerHTML = tema.paineis.map(function (p) {
-      var ativo = p.rota === painel.rota;
-      return '<a class="aba" href="#/' + p.rota + '"' + (ativo ? ' aria-current="page"' : "") + '>' +
+      return '<a class="aba" href="#/' + p.rota + '"' + (p.rota === painel.rota ? ' aria-current="page"' : "") + '>' +
         '<span class="aba__indice">' + p.indice + "</span>" + escapaHTML(p.titulo) + "</a>";
     }).join("");
     var ativa = $(".aba[aria-current]", abas);
@@ -452,11 +545,12 @@
     montarAbas(tema, painel);
 
     var temURL = !!painel.url;
+    var externo = urlNavegavel(painel.url);
     pendente.hidden = temURL;
-    $("#acao-nova-aba").href = painel.url || "#";
+    $("#acao-nova-aba").href = externo || "#";
     $("#acao-nova-aba").setAttribute("aria-disabled", String(!temURL));
     $("#acao-nova-aba").classList.toggle("acao--inativa", !temURL);
-    $("#aviso-nova-aba").href = painel.url || "#";
+    $("#aviso-nova-aba").href = externo || "#";
     $("#acao-recarregar").disabled = !temURL;
 
     if (temURL) {
@@ -506,6 +600,9 @@
   function rotear(primeiraVez) {
     var r = lerRota();
 
+    // "#principal" vem do link "Pular para o conteúdo" — não é rota.
+    if (r.caminho === "principal") { principal.focus({ preventScroll: true }); return; }
+
     if (!r.caminho) {
       rotaAtual = "";
       trocarVista("inicio");
@@ -528,7 +625,6 @@
 
     var achado = porRota[r.caminho];
     if (!achado) {
-      // "#/tema" abre o primeiro painel do tema
       var tema = temas.filter(function (t) { return t.slug === r.caminho; })[0];
       if (tema) { location.replace("#/" + tema.paineis[0].rota); return; }
       rotaAtual = "";
@@ -546,16 +642,19 @@
   $("#acao-recarregar").addEventListener("click", function () {
     var achado = porRota[rotaAtual];
     if (!achado || !achado.painel.url) return;
-    if (cache[rotaAtual]) { cache[rotaAtual].remove(); delete cache[rotaAtual]; ordem = ordem.filter(function (r) { return r !== rotaAtual; }); }
+    if (cache[rotaAtual]) {
+      cache[rotaAtual].remove();
+      delete cache[rotaAtual];
+      ordem = ordem.filter(function (r) { return r !== rotaAtual; });
+    }
     trocarIframe(achado.painel);
     avisar("Recarregando o painel…");
   });
 
   $("#acao-copiar").addEventListener("click", function () {
     var link = location.href;
-    var copiar = navigator.clipboard && navigator.clipboard.writeText
-      ? navigator.clipboard.writeText(link)
-      : Promise.reject();
+    var copiar = (navigator.clipboard && navigator.clipboard.writeText)
+      ? navigator.clipboard.writeText(link) : Promise.reject();
     copiar.then(function () { avisar("Link copiado para a área de transferência."); })
           .catch(function () { window.prompt("Copie o link deste painel:", link); });
   });
@@ -574,10 +673,10 @@
     botaoTela.setAttribute("aria-pressed", String(cheio));
     botaoTela.title = cheio ? "Sair da tela cheia" : "Ver em tela cheia";
     $(".acao__texto", botaoTela).textContent = cheio ? "Sair" : "Tela cheia";
-    $("use", botaoTela).setAttribute("href", cheio ? "#i-sair-tela-cheia" : "#i-tela-cheia");
+    $("use", botaoTela).setAttribute("href", cheio ? "#i-comprimir" : "#i-expandir");
   });
 
-  /* ---------- Avisos e anúncios ------------------------------------------ */
+  /* ---------- Avisos ----------------------------------------------------- */
   var toast = $("#toast");
   var relogioToast = null;
 
@@ -594,18 +693,26 @@
     setTimeout(function () { el.textContent = texto; }, 60);
   }
 
-  /* ---------- Voltar ao topo --------------------------------------------- */
+  /* ---------- Voltar ao topo e âncoras ----------------------------------- */
   var voltarTopo = $("#voltar-topo");
   principal.addEventListener("scroll", function () {
     voltarTopo.hidden = !(app.dataset.vista === "inicio" && principal.scrollTop > 420);
   }, { passive: true });
+
   voltarTopo.addEventListener("click", function () {
     principal.scrollTo({ top: 0, behavior: "smooth" });
     voltarTopo.hidden = true;
-    $("[data-foco]", vistas.inicio).focus({ preventScroll: true });
+    focarVista("inicio");
   });
 
-  /* ---------- Âncoras internas da página inicial -------------------------- */
+  // "Pular para o conteúdo": move o foco sem mexer na rota.
+  var pular = $("#pular-link");
+  if (pular) pular.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    principal.focus();
+    principal.scrollTo({ top: 0 });
+  });
+
   document.addEventListener("click", function (ev) {
     var link = ev.target.closest("[data-ancora]");
     if (!link) return;
@@ -617,9 +724,9 @@
     else location.hash = destino.slice(1);
   });
 
-  /* ---------- Início ------------------------------------------------------ */
+  /* ---------- Início ----------------------------------------------------- */
   prepararCatalogo();
-  montarIndicadores();
+  montarNumeros();
   montarMenus();
   montarFiltros();
   montarGrade();

@@ -2,40 +2,70 @@
    Observatório SUAS — CATÁLOGO DE PAINÉIS
    --------------------------------------------------------------------------
    ESTE É O ÚNICO ARQUIVO DO DIA A DIA.
-   Para incluir, trocar ou remover um painel, edite apenas a lista abaixo.
+   Para incluir, trocar ou remover um painel, edite apenas as listas abaixo.
+   ========================================================================== */
 
-   Como pegar o link no Power BI
-     1. Abra o relatório no Power BI Service.
-     2. Arquivo › Inserir relatório › Publicar na Web (público).
-     3. Copie o link (https://app.powerbi.com/view?r=...).
-        Pode colar o <iframe> inteiro: o site extrai o endereço sozinho.
-     4. Cole no campo "url" do painel correspondente.
 
-   Painel com "url" vazio aparece normalmente no menu, mas abre uma tela
-   avisando que ainda não foi publicado. Assim a estrutura do Observatório
-   fica pronta antes dos relatórios.
+/* ---------------------------------------------------------------------------
+   1. CONFIGURAÇÃO DO SITE
+   Campos opcionais. Deixe "" para o site simplesmente não exibir o item.
+--------------------------------------------------------------------------- */
+window.OBSERVATORIO = {
+  // Aparece no selo do topo. Ex.: "Atualizado em setembro de 2026".
+  atualizadoEm: "",
+
+  // E-mail ou telefone do DPEI, exibido no rodapé. Ex.: "dpei@portovelho.ro.gov.br".
+  contato: ""
+};
+
+
+/* ---------------------------------------------------------------------------
+   2. COMO PEGAR O LINK DE UM PAINEL NO TABLEAU
+
+   Tableau Public
+     1. Abra a visualização publicada no seu perfil.
+     2. Clique em "Compartilhar" (ícone de seta no rodapé da viz).
+     3. Copie o "Link" OU o código "Incorporar".
+        Os dois formatos funcionam — o site converte sozinho:
+          https://public.tableau.com/app/profile/SEU.PERFIL/viz/Pasta/Painel
+          https://public.tableau.com/views/Pasta/Painel?:embed=y
+          <iframe src="https://public.tableau.com/views/Pasta/Painel?..."></iframe>
+
+   Tableau Cloud / Server
+     Use o link da viz no seu site (ex.: https://SEU-SITE.online.tableau.com/...).
+     Painéis que exigem login não abrem para o público: para o Observatório,
+     publique a viz como pública.
+
+   Depois de colar, o painel já aparece no menu, na busca e nos cartões.
+   Painel com "url" vazio continua no menu e abre uma tela avisando que
+   ainda não foi publicado — assim a estrutura fica pronta antes dos relatórios.
+--------------------------------------------------------------------------- */
+
+
+/* ---------------------------------------------------------------------------
+   3. TEMAS E PAINÉIS
 
    Campos de um TEMA
      titulo    Nome exibido no menu, nos cartões e nas migalhas.
-     icone     Um dos ícones do sprite (lista abaixo).
+     icone     Um dos ícones da lista abaixo.
      eixo      Agrupa os temas nos filtros da página inicial.
      cor       "azul" | "verde" | "amarelo"  (tons do brasão da Prefeitura).
      descricao Uma frase curta, mostrada no cartão da página inicial.
      paineis   Lista de { titulo, url }. A ordem aqui é a ordem no site.
 
    Ícones disponíveis
-     i-radar          i-casa-coracao   i-escudo-pessoas  i-identidade
-     i-mao-moeda      i-grupo          i-cesta           i-rede
-     i-mapa           i-grafico        i-capacitacao     i-carteira
-     i-balanca        i-predio         i-lupa-dados      i-escudo-ok
+     i-radar     i-casa       i-escudo      i-identidade
+     i-moeda     i-grupo      i-cesta       i-rede
+     i-mapa      i-grafico    i-capacitacao i-carteira
+     i-balanca   i-predio     i-lupa-dados  i-banco
+     i-painel    i-funil      i-coleta
 
-   Endereço de cada painel: #/tema/painel (gerado a partir dos títulos,
-   sem acentos). Renomear um painel muda o link dele.
-   ========================================================================== */
+   Endereço de cada painel: #/tema/painel (gerado a partir dos títulos, sem
+   acentos). Renomear um painel muda o link dele.
+--------------------------------------------------------------------------- */
 
 window.CATALOGO = [
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Vigilância Socioassistencial",
     icone: "i-radar",
@@ -50,10 +80,9 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Proteção Social Básica",
-    icone: "i-casa-coracao",
+    icone: "i-casa",
     eixo: "Proteção social",
     cor: "verde",
     descricao: "CRAS, PAIF e serviços de prevenção que fortalecem famílias e vínculos comunitários.",
@@ -65,10 +94,9 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Proteção Social Especial",
-    icone: "i-escudo-pessoas",
+    icone: "i-escudo",
     eixo: "Proteção social",
     cor: "azul",
     descricao: "Média e alta complexidade: CREAS, PAEFI, acolhimento, abordagem social e Centro POP.",
@@ -80,7 +108,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Cadastro Único",
     icone: "i-identidade",
@@ -95,10 +122,9 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Benefícios e Transferência de Renda",
-    icone: "i-mao-moeda",
+    icone: "i-moeda",
     eixo: "Renda e benefícios",
     cor: "verde",
     descricao: "Bolsa Família, BPC e benefícios eventuais concedidos pelo município.",
@@ -110,7 +136,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Convivência e Fortalecimento de Vínculos",
     icone: "i-grupo",
@@ -125,7 +150,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Segurança Alimentar e Nutricional",
     icone: "i-cesta",
@@ -138,7 +162,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Rede Socioassistencial",
     icone: "i-rede",
@@ -152,7 +175,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Território e Vulnerabilidade",
     icone: "i-mapa",
@@ -166,7 +188,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Indicadores e Estatísticas",
     icone: "i-grafico",
@@ -181,7 +202,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Gestão do Trabalho",
     icone: "i-capacitacao",
@@ -194,7 +214,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Financiamento e FMAS",
     icone: "i-carteira",
@@ -208,7 +227,6 @@ window.CATALOGO = [
     ]
   },
 
-  /* ---------------------------------------------------------------- */
   {
     titulo: "Controle Social e Transparência",
     icone: "i-balanca",
