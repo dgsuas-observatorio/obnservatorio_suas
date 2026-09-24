@@ -4,14 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Observatório SUAS — Sistema Único de Assistência Social | Porto Velho</title>
-  <meta name="description" content="Painéis públicos e interativos do Sistema Único de Assistência Social de Porto Velho. Realização: DGSUAS e DPEI — Departamento de Pesquisa, Estatística e Indicadores da SEMIAS.">
+  <meta name="description" content="Painéis públicos e interativos do Sistema Único de Assistência Social de Porto Velho. Dados coletados e tratados pela DGSUAS; estruturação, painéis e manutenção pelo DPEI — Departamento de Pesquisa, Estatística e Indicadores da SEMIAS.">
 
-  <!-- Segurança: só executa scripts/estilos do próprio site e só incorpora iframes do Power BI -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://app.powerbi.com; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+  <!-- Segurança: só executa scripts/estilos do próprio site e só incorpora iframes do Tableau -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://public.tableau.com https://*.tableau.com; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
 
+  <!-- Endereço público (ajuste se o domínio mudar) -->
+  <link rel="canonical" href="https://dgsuas-observatorio.github.io/obnservatorio_suas/">
+
   <!-- Identidade / PWA -->
-  <meta name="theme-color" content="#eceff5">
+  <meta name="theme-color" content="#e9edf4">
   <meta name="color-scheme" content="light">
   <link rel="icon" href="assets/img/favicon.ico" sizes="any">
   <link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
@@ -22,6 +25,7 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <meta property="og:site_name" content="Observatório SUAS — Porto Velho">
+  <meta property="og:url" content="https://dgsuas-observatorio.github.io/obnservatorio_suas/">
   <meta property="og:title" content="Observatório SUAS — Sistema Único de Assistência Social">
   <meta property="og:description" content="Painéis públicos e interativos do SUAS em Porto Velho. Realização DGSUAS e DPEI/SEMIAS.">
   <meta property="og:image" content="assets/img/og-image.png">
@@ -32,8 +36,8 @@
 
   <!-- Desempenho -->
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preconnect" href="https://app.powerbi.com">
-  <link rel="dns-prefetch" href="https://app.powerbi.com">
+  <link rel="preconnect" href="https://public.tableau.com">
+  <link rel="dns-prefetch" href="https://public.tableau.com">
 
   <link rel="stylesheet" href="assets/css/styles.css">
 
@@ -45,6 +49,7 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Observatório SUAS — Porto Velho",
+    "url": "https://dgsuas-observatorio.github.io/obnservatorio_suas/",
     "inLanguage": "pt-BR",
     "description": "Painéis públicos e interativos do Sistema Único de Assistência Social do município de Porto Velho (RO).",
     "publisher": {
@@ -56,57 +61,64 @@
   </script>
 </head>
 <body>
-  <a class="pular-link" href="#principal">Pular para o conteúdo</a>
+  <a class="pular-link" href="#principal" id="pular-link">Pular para o conteúdo</a>
 
-  <!-- ===================== ÍCONES (sprite SVG) =====================
-       Traço de 1.65, cantos arredondados, geometria simples.
-       Uso: <svg class="icone"><use href="#i-nome"/></svg>            -->
+  <!-- ===================== ÍCONES =====================
+       Conjunto linear (outline) desenhado em grade de 24 px, traço 1.5,
+       terminações arredondadas. Sem preenchimento, sem biblioteca externa.
+       Uso: <svg class="icone"><use href="#i-nome"/></svg>              -->
   <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- Temas do SUAS -->
-      <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/><path d="M12 12 18.1 5.9"/></symbol>
-      <symbol id="i-casa-coracao" viewBox="0 0 24 24"><path d="M3 10.6 12 3.4l9 7.2"/><path d="M5.5 9.6V20.3h13V9.6"/><path d="M12 17.6s-2.9-1.8-2.9-3.6a1.65 1.65 0 0 1 2.9-1 1.65 1.65 0 0 1 2.9 1c0 1.8-2.9 3.6-2.9 3.6z"/></symbol>
-      <symbol id="i-escudo-pessoas" viewBox="0 0 24 24"><path d="M12 3.2 4.5 5.9v5.6c0 4.4 3.1 8 7.5 9.3 4.4-1.3 7.5-4.9 7.5-9.3V5.9z"/><circle cx="12" cy="10.2" r="2.1"/><path d="M8.5 16.6a3.7 3.7 0 0 1 7 0"/></symbol>
-      <symbol id="i-identidade" viewBox="0 0 24 24"><rect x="2.6" y="5" width="18.8" height="14" rx="2.6"/><circle cx="8.6" cy="10.9" r="2"/><path d="M5.5 16.2a3.4 3.4 0 0 1 6.2 0"/><path d="M14.6 10h4.4M14.6 13.4h4.4"/></symbol>
-      <symbol id="i-mao-moeda" viewBox="0 0 24 24"><circle cx="12" cy="6.8" r="3.4"/><path d="M12.2 4.8v4"/><path d="M13.2 5.6c-.3-.4-.7-.6-1.2-.6-.7 0-1.2.4-1.2.9s.5.8 1.2.9 1.2.4 1.2.9-.5 1-1.2 1c-.5 0-1-.2-1.2-.6"/><path d="M2.8 15h3.4l2.2 1.6h3.1a1.55 1.55 0 0 1 0 3.1H8.3"/><path d="M11.1 16.6h2.6l4.7-1.9a1.75 1.75 0 0 1 1.8 2.8l-4.3 3.1a3.7 3.7 0 0 1-2.2.7H6.4L2.8 19.6"/></symbol>
-      <symbol id="i-grupo" viewBox="0 0 24 24"><circle cx="9" cy="8.8" r="3.1"/><path d="M3.2 18.6a5.8 5.8 0 0 1 11.6 0"/><path d="M16.2 6.4a3.1 3.1 0 0 1 0 5.4M17.9 14.5a5.7 5.7 0 0 1 3 4.1"/></symbol>
-      <symbol id="i-cesta" viewBox="0 0 24 24"><path d="M3 9.4h18l-1.7 8.4a2.2 2.2 0 0 1-2.2 1.8H6.9a2.2 2.2 0 0 1-2.2-1.8z"/><path d="m8.5 9.4 2.6-5.2M15.5 9.4 12.9 4.2"/><path d="M9.4 13v3.2M14.6 13v3.2"/></symbol>
-      <symbol id="i-rede" viewBox="0 0 24 24"><circle cx="12" cy="4.9" r="2.3"/><circle cx="5" cy="18" r="2.3"/><circle cx="19" cy="18" r="2.3"/><path d="m10.4 6.6-3.8 9.2M13.6 6.6l3.8 9.2M7.3 18h9.4"/></symbol>
-      <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4.8 3.6 6.9v12.3L9 17.1l6 2.1 5.4-2.1V4.8L15 6.9z"/><path d="M9 4.8v12.3M15 6.9v12.3"/></symbol>
-      <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3.5 3.4v17.2h17.2"/><path d="M7.6 16.8v-4.2M12 16.8V9.4M16.4 16.8V6.6"/></symbol>
-      <symbol id="i-capacitacao" viewBox="0 0 24 24"><path d="M12 3.6 2.8 8.2 12 12.8l9.2-4.6z"/><path d="M6.6 10.6v4.6c0 1.6 2.4 2.9 5.4 2.9s5.4-1.3 5.4-2.9v-4.6"/><path d="M21.2 8.2v5.4"/></symbol>
-      <symbol id="i-carteira" viewBox="0 0 24 24"><rect x="2.8" y="5.6" width="18.4" height="13.2" rx="2.6"/><path d="M2.8 9.6h18.4"/><circle cx="17.2" cy="14.4" r="1.15"/></symbol>
-      <symbol id="i-balanca" viewBox="0 0 24 24"><path d="M12 6.4v13.4M8.4 19.8h7.2"/><path d="M4.6 7.6 12 6l7.4 1.6"/><path d="M2.4 13.4 4.6 8l2.2 5.4a2.4 2.4 0 0 1-4.4 0z"/><path d="M17.2 13.9 19.4 8.5l2.2 5.4a2.4 2.4 0 0 1-4.4 0z"/><circle cx="12" cy="4.6" r="1.1"/></symbol>
-      <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 20.6h18"/><path d="M4.8 20.6V6.4L12 3.5l7.2 2.9v14.2"/><path d="M9.4 20.6v-4.4h5.2v4.4"/><path d="M9 8.9h1.6M13.4 8.9H15M9 12.5h1.6M13.4 12.5H15"/></symbol>
-      <symbol id="i-lupa-dados" viewBox="0 0 24 24"><circle cx="10.6" cy="10.6" r="6.6"/><path d="m20 20-4.6-4.6"/><path d="M8.4 12.6v-2.2M10.6 12.6V8.4M12.8 12.6V9.6"/></symbol>
+      <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.75"/><circle cx="12" cy="12" r="4"/><path d="M12 12 18.2 5.8"/></symbol>
+      <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3.5 10.6 12 4l8.5 6.6"/><path d="M5.9 9.7V20h12.2V9.7"/><path d="M12 17.1c-1.6-1-2.5-1.9-2.5-3a1.45 1.45 0 0 1 2.5-.9 1.45 1.45 0 0 1 2.5.9c0 1.1-.9 2-2.5 3Z"/></symbol>
+      <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3.5 5 6.1v5.4c0 4.1 2.9 7.6 7 8.7 4.1-1.1 7-4.6 7-8.7V6.1Z"/><circle cx="12" cy="10.4" r="1.95"/><path d="M8.8 16.4a3.4 3.4 0 0 1 6.4 0"/></symbol>
+      <symbol id="i-identidade" viewBox="0 0 24 24"><rect x="2.75" y="5.25" width="18.5" height="13.5" rx="2.5"/><circle cx="8.6" cy="11" r="1.9"/><path d="M5.7 16a3.3 3.3 0 0 1 5.8 0"/><path d="M14.7 10.2h4.1M14.7 13.6h4.1"/></symbol>
+      <symbol id="i-moeda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.75"/><path d="M12 7.1v9.8"/><path d="M14.5 9.4c-.55-.75-1.45-1.15-2.5-1.15-1.55 0-2.7.85-2.7 1.95 0 1.05.95 1.7 2.7 1.9 1.75.2 2.7.85 2.7 1.9 0 1.1-1.15 1.95-2.7 1.95-1.15 0-2.1-.45-2.6-1.25"/></symbol>
+      <symbol id="i-grupo" viewBox="0 0 24 24"><circle cx="9.2" cy="8.7" r="3"/><path d="M3.5 18.5a5.7 5.7 0 0 1 11.4 0"/><path d="M16.4 6.3a3 3 0 0 1 0 4.8"/><path d="M18 14.4a5.6 5.6 0 0 1 2.9 4.1"/></symbol>
+      <symbol id="i-cesta" viewBox="0 0 24 24"><path d="M3.2 9.6h17.6l-1.6 8a2.1 2.1 0 0 1-2.1 1.7H6.9a2.1 2.1 0 0 1-2.1-1.7Z"/><path d="m8.6 9.6 2.5-5M15.4 9.6l-2.5-5"/><path d="M9.6 13.2v2.9M14.4 13.2v2.9"/></symbol>
+      <symbol id="i-rede" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><circle cx="5.2" cy="18" r="2.2"/><circle cx="18.8" cy="18" r="2.2"/><path d="m10.5 6.6-3.8 9M13.5 6.6l3.8 9M7.4 18h9.2"/></symbol>
+      <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9.2 5 3.8 7v12l5.4-2 5.6 2 5.4-2V5l-5.4 2Z"/><path d="M9.2 5v12M14.8 7v12"/></symbol>
+      <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3.8 3.6v16.6h16.4"/><path d="M7.8 16.6v-3.9M12 16.6V9.6M16.2 16.6V6.8"/></symbol>
+      <symbol id="i-capacitacao" viewBox="0 0 24 24"><path d="M12 4 3.2 8.2 12 12.4l8.8-4.2Z"/><path d="M6.9 10.6v4.3c0 1.5 2.3 2.8 5.1 2.8s5.1-1.3 5.1-2.8v-4.3"/><path d="M20.8 8.2v5.1"/></symbol>
+      <symbol id="i-carteira" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12.5" rx="2.5"/><path d="M3 10h18"/><circle cx="17" cy="14.4" r="1.05"/></symbol>
+      <symbol id="i-balanca" viewBox="0 0 24 24"><path d="M12 6.2v13.6M8.6 19.8h6.8"/><path d="M4.8 7.8 12 6.2l7.2 1.6"/><path d="M2.8 13.6 4.9 8.4l2.1 5.2a2.25 2.25 0 0 1-4.2 0Z"/><path d="M17 13.6l2.1-5.2 2.1 5.2a2.25 2.25 0 0 1-4.2 0Z"/></symbol>
+
+      <!-- Órgãos e fluxo dos dados -->
+      <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 20.4h18"/><path d="M5 20.4V6.6L12 4l7 2.6v13.8"/><path d="M9.6 20.4v-4.2h4.8v4.2"/><path d="M9.3 9.2h1.5M13.2 9.2h1.5M9.3 12.6h1.5M13.2 12.6h1.5"/></symbol>
+      <symbol id="i-lupa-dados" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"/><path d="m19.6 19.6-4.1-4.1"/><path d="M8.7 12.6v-2M10.8 12.6V8.8M12.9 12.6V10"/></symbol>
+      <symbol id="i-coleta" viewBox="0 0 24 24"><path d="M12 3.8v9.6"/><path d="m8.2 9.8 3.8 3.8 3.8-3.8"/><path d="M4.2 15.4v2.8a2 2 0 0 0 2 2h11.6a2 2 0 0 0 2-2v-2.8"/></symbol>
+      <symbol id="i-funil" viewBox="0 0 24 24"><path d="M3.6 4.6h16.8l-6.6 7.6v6.3l-3.6 2v-8.3Z"/></symbol>
+      <symbol id="i-banco" viewBox="0 0 24 24"><ellipse cx="12" cy="6.2" rx="7.4" ry="2.6"/><path d="M4.6 6.2v11.6c0 1.45 3.3 2.6 7.4 2.6s7.4-1.15 7.4-2.6V6.2"/><path d="M4.6 12c0 1.45 3.3 2.6 7.4 2.6s7.4-1.15 7.4-2.6"/></symbol>
+      <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="4.2" width="18" height="13" rx="2.2"/><path d="M8.4 20.2h7.2M12 17.2v3"/><path d="M7.4 13.4v-2.6M11 13.4V8.4M14.6 13.4v-4"/></symbol>
 
       <!-- Interface -->
-      <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M3.2 10.8 12 3.6l8.8 7.2"/><path d="M5.4 9.8v10.5h13.2V9.8"/><path d="M9.6 20.3v-5.4h4.8v5.4"/></symbol>
-      <symbol id="i-camadas" viewBox="0 0 24 24"><path d="m12 3.2 8.6 4.6L12 12.4 3.4 7.8z"/><path d="m3.4 12.1 8.6 4.6 8.6-4.6"/><path d="m3.4 16.4 8.6 4.6 8.6-4.6"/></symbol>
-      <symbol id="i-grade" viewBox="0 0 24 24"><rect x="3.2" y="3.2" width="7.4" height="7.4" rx="2.1"/><rect x="13.4" y="3.2" width="7.4" height="7.4" rx="2.1"/><rect x="3.2" y="13.4" width="7.4" height="7.4" rx="2.1"/><rect x="13.4" y="13.4" width="7.4" height="7.4" rx="2.1"/></symbol>
-      <symbol id="i-seta-baixo" viewBox="0 0 24 24"><path d="m6 9.5 6 5.5 6-5.5"/></symbol>
-      <symbol id="i-seta-direita" viewBox="0 0 24 24"><path d="M4.6 12h14"/><path d="m12.8 6.2 5.8 5.8-5.8 5.8"/></symbol>
-      <symbol id="i-seta-cima" viewBox="0 0 24 24"><path d="M12 19.6V4.8"/><path d="m6.2 10.6 5.8-5.8 5.8 5.8"/></symbol>
-      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7.2h16M4 12h16M4 16.8h16"/></symbol>
-      <symbol id="i-fechar" viewBox="0 0 24 24"><path d="m6.2 6.2 11.6 11.6M17.8 6.2 6.2 17.8"/></symbol>
-      <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="10.9" cy="10.9" r="6.8"/><path d="m20 20-4.3-4.3"/></symbol>
-      <symbol id="i-recarregar" viewBox="0 0 24 24"><path d="M20.2 11.3a8.2 8.2 0 1 0-2.4 6"/><path d="M20.4 4.6v6.8h-6.8"/></symbol>
-      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.2 13.4a4.8 4.8 0 0 0 7.2.5l2.6-2.6a4.8 4.8 0 1 0-6.8-6.8l-1.5 1.5"/><path d="M13.8 10.6a4.8 4.8 0 0 0-7.2-.5L4 12.7a4.8 4.8 0 1 0 6.8 6.8l1.5-1.5"/></symbol>
-      <symbol id="i-nova-aba" viewBox="0 0 24 24"><path d="M14 4.2h5.8V10"/><path d="M19.8 4.2 11.4 12.6"/><path d="M18 14.2v5.1a1.6 1.6 0 0 1-1.6 1.6H5a1.6 1.6 0 0 1-1.6-1.6V7.9A1.6 1.6 0 0 1 5 6.3h5.1"/></symbol>
-      <symbol id="i-tela-cheia" viewBox="0 0 24 24"><path d="M4 9.2V4h5.2M20 9.2V4h-5.2M4 14.8V20h5.2M20 14.8V20h-5.2"/></symbol>
-      <symbol id="i-sair-tela-cheia" viewBox="0 0 24 24"><path d="M9.2 4v5.2H4M14.8 4v5.2H20M9.2 20v-5.2H4M14.8 20v-5.2H20"/></symbol>
-      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 11.2v5M12 7.9h.01"/></symbol>
-      <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M10.6 4.3 2.7 18a1.6 1.6 0 0 0 1.4 2.4h15.8a1.6 1.6 0 0 0 1.4-2.4L13.4 4.3a1.6 1.6 0 0 0-2.8 0z"/><path d="M12 9.6v4.3M12 17.2h.01"/></symbol>
-      <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.2V12l3.1 1.9"/></symbol>
-      <symbol id="i-enter" viewBox="0 0 24 24"><path d="M19.6 5v5.6a2.2 2.2 0 0 1-2.2 2.2H4.6"/><path d="m8.6 8.6-4 4.2 4 4.2"/></symbol>
-      <symbol id="i-escudo-ok" viewBox="0 0 24 24"><path d="M12 3.2 4.5 5.9v5.6c0 4.4 3.1 8 7.5 9.3 4.4-1.3 7.5-4.9 7.5-9.3V5.9z"/><path d="m8.8 11.9 2.2 2.2 4.2-4.3"/></symbol>
+      <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M3.4 10.8 12 4l8.6 6.8"/><path d="M5.7 9.9v10.2h12.6V9.9"/><path d="M9.8 20.1v-5.2h4.4v5.2"/></symbol>
+      <symbol id="i-camadas" viewBox="0 0 24 24"><path d="m12 3.6 8.4 4.5L12 12.6 3.6 8.1Z"/><path d="m3.6 12.3 8.4 4.5 8.4-4.5"/><path d="m3.6 16.5 8.4 4.5 8.4-4.5"/></symbol>
+      <symbol id="i-grade" viewBox="0 0 24 24"><rect x="3.4" y="3.4" width="7.2" height="7.2" rx="2"/><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="2"/><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="2"/><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="2"/></symbol>
+      <symbol id="i-seta-baixo" viewBox="0 0 24 24"><path d="m6.4 9.6 5.6 5.2 5.6-5.2"/></symbol>
+      <symbol id="i-seta-direita" viewBox="0 0 24 24"><path d="M4.8 12h14.4"/><path d="m13.2 6.4 5.8 5.6-5.8 5.6"/></symbol>
+      <symbol id="i-seta-cima" viewBox="0 0 24 24"><path d="M12 19.4V4.9"/><path d="m6.4 10.5 5.6-5.6 5.6 5.6"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7.4h16M4 12h16M4 16.6h16"/></symbol>
+      <symbol id="i-fechar" viewBox="0 0 24 24"><path d="m6.4 6.4 11.2 11.2M17.6 6.4 6.4 17.6"/></symbol>
+      <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="10.9" cy="10.9" r="6.65"/><path d="m19.6 19.6-4.05-4.05"/></symbol>
+      <symbol id="i-recarregar" viewBox="0 0 24 24"><path d="M20 11.4A8.2 8.2 0 1 0 17.6 17.4"/><path d="M20.3 4.9v6.5h-6.5"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.4 13.4a4.6 4.6 0 0 0 6.9.5l2.4-2.4a4.6 4.6 0 0 0-6.5-6.5l-1.4 1.4"/><path d="M13.6 10.6a4.6 4.6 0 0 0-6.9-.5l-2.4 2.4a4.6 4.6 0 0 0 6.5 6.5l1.4-1.4"/></symbol>
+      <symbol id="i-externo" viewBox="0 0 24 24"><path d="M14.2 4.4h5.4v5.4"/><path d="M19.6 4.4 11.6 12.4"/><path d="M18 14.2v4.6a1.6 1.6 0 0 1-1.6 1.6H5.2a1.6 1.6 0 0 1-1.6-1.6V7.6A1.6 1.6 0 0 1 5.2 6h4.6"/></symbol>
+      <symbol id="i-expandir" viewBox="0 0 24 24"><path d="M4.4 9.4V4.4h5M19.6 9.4V4.4h-5M4.4 14.6v5h5M19.6 14.6v5h-5"/></symbol>
+      <symbol id="i-comprimir" viewBox="0 0 24 24"><path d="M9.4 4.4v5h-5M14.6 4.4v5h5M9.4 19.6v-5h-5M14.6 19.6v-5h5"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5M12 8.1h.01"/></symbol>
+      <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M10.7 4.5 3 17.9a1.5 1.5 0 0 0 1.3 2.3h15.4a1.5 1.5 0 0 0 1.3-2.3L13.3 4.5a1.5 1.5 0 0 0-2.6 0Z"/><path d="M12 9.8v4.2M12 17.1h.01"/></symbol>
+      <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.4V12l3 1.8"/></symbol>
+      <symbol id="i-enter" viewBox="0 0 24 24"><path d="M19.4 5.2v5.4a2.1 2.1 0 0 1-2.1 2.1H4.8"/><path d="m8.6 8.8-3.8 3.9 3.8 3.9"/></symbol>
+      <symbol id="i-cadeado" viewBox="0 0 24 24"><rect x="4.6" y="10.4" width="14.8" height="9.6" rx="2.2"/><path d="M8.2 10.4V7.8a3.8 3.8 0 0 1 7.6 0v2.6"/><path d="M12 14.2v2"/></symbol>
     </defs>
   </svg>
 
   <div class="app" data-vista="inicio">
 
     <!-- ===================== BARRA SUPERIOR ===================== -->
-    <header class="barra vidro">
+    <header class="barra vidro vidro--xg">
       <a class="marca" href="#/" aria-label="Observatório SUAS — página inicial">
         <img class="marca__simbolo" src="assets/img/simbolo-pvh.png" alt="" width="360" height="271" decoding="async">
         <span class="marca__texto">
@@ -141,7 +153,7 @@
           <li>
             <a class="menu__botao" href="#/#sobre" data-ancora="sobre">
               <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-info"/></svg>
-              Sobre
+              Como é feito
             </a>
           </li>
         </ul>
@@ -153,12 +165,11 @@
           <span class="busca-gatilho__texto">Buscar painel ou tema…</span>
           <kbd class="tecla" aria-hidden="true">Ctrl K</kbd>
         </button>
-        <button class="botao-icone barra__hamburguer" id="botao-gaveta" type="button" aria-expanded="false" aria-controls="gaveta" aria-label="Abrir menu">
+        <button class="botao-icone barra__hamburguer" id="botao-gaveta" type="button" aria-expanded="false" aria-controls="gaveta" aria-label="Abrir menu de temas">
           <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-menu"/></svg>
         </button>
       </div>
 
-      <!-- Mega-menu de temas -->
       <div class="mega" id="mega" role="region" aria-label="Temas do Observatório" hidden>
         <div class="mega__cabecalho">
           <span class="rotulo">Temas do SUAS</span>
@@ -174,141 +185,150 @@
       <!-- ---------- Página inicial ---------- -->
       <section class="vista vista--inicio" id="vista-inicio" aria-labelledby="titulo-inicio">
 
-        <div class="heroi">
-          <div class="heroi__painel vidro">
-            <div class="heroi__topo">
-              <span class="selo"><span class="selo__ponto"></span> Dados públicos · atualização contínua</span>
+        <div class="abertura">
+          <div class="abertura__painel vidro vidro--xg">
+            <div class="abertura__topo">
+              <span class="selo"><span class="selo__ponto"></span> <span id="selo-atualizacao">Publicação contínua</span></span>
               <span class="selo"><span class="selo__ponto selo__ponto--azul"></span> DGSUAS + DPEI</span>
+              <span class="selo"><span class="selo__ponto selo__ponto--amarelo"></span> Painéis em Tableau</span>
             </div>
 
-            <h1 class="heroi__titulo" id="titulo-inicio" tabindex="-1" data-foco>
+            <h1 class="abertura__titulo" id="titulo-inicio" tabindex="-1" data-foco>
               Observatório SUAS
               <em>Sistema Único de Assistência Social · Porto Velho</em>
             </h1>
 
-            <p class="heroi__descricao">
-              Um só lugar para acompanhar a assistência social do município: painéis interativos sobre
-              proteção social básica e especial, Cadastro Único, benefícios, rede de serviços, território
-              e os indicadores produzidos pela vigilância socioassistencial.
+            <p class="abertura__texto">
+              Reunimos num só lugar o que o município sabe sobre a sua rede de assistência social:
+              quantas famílias são acompanhadas, onde estão os serviços, como se distribuem os
+              benefícios e o que os indicadores mostram ao longo do tempo. Tudo em painéis abertos,
+              feitos para serem consultados por gestores, conselheiros e por qualquer cidadão.
             </p>
 
-            <div class="heroi__acoes">
+            <div class="abertura__acoes">
               <a class="botao botao--principal" href="#/#temas" data-ancora="temas">
-                Explorar os painéis
+                Ver os painéis
                 <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-seta-direita"/></svg>
               </a>
-              <button class="botao" type="button" id="heroi-buscar">
+              <button class="botao" type="button" id="abertura-buscar">
                 <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-busca"/></svg>
                 Buscar por nome
               </button>
             </div>
 
-            <div class="heroi__assinatura">
+            <div class="assinatura">
               <img src="assets/img/semias.png" alt="SEMIAS — Secretaria Municipal de Inclusão e Assistência Social · Cidade de Porto Velho" width="1000" height="213" loading="lazy" decoding="async">
               <span>
-                Realização: <strong>DGSUAS</strong> — Diretoria de Gestão do SUAS e
+                Uma iniciativa da <strong>DGSUAS</strong> — Diretoria de Gestão do SUAS, com
                 <strong>DPEI</strong> — Departamento de Pesquisa, Estatística e Indicadores.
               </span>
             </div>
           </div>
 
           <div class="aparte">
-            <div class="vitrine vidro">
+            <div class="vitrine vidro vidro--xg">
               <img class="vitrine__brasao" src="assets/img/brasao-pvh.png" alt="Brasão da Prefeitura de Porto Velho" width="420" height="561" loading="lazy" decoding="async">
             </div>
-            <div class="indicadores">
-              <div class="indicador vidro vidro--fino">
-                <span class="indicador__rotulo">
+            <div class="numeros">
+              <div class="numero vidro vidro--leve">
+                <span class="numero__rotulo">
                   <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-camadas"/></svg>
                   Temas
                 </span>
-                <p class="indicador__valor" id="total-temas">—</p>
-                <p class="indicador__nota">áreas do SUAS</p>
+                <p class="numero__valor" id="total-temas">—</p>
+                <p class="numero__nota">áreas do SUAS</p>
               </div>
-              <div class="indicador indicador--verde vidro vidro--fino">
-                <span class="indicador__rotulo">
+              <div class="numero numero--verde vidro vidro--leve">
+                <span class="numero__rotulo">
                   <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-grade"/></svg>
                   Painéis
                 </span>
-                <p class="indicador__valor" id="total-paineis">—</p>
-                <p class="indicador__nota">publicados no Power BI</p>
+                <p class="numero__valor" id="total-paineis">—</p>
+                <p class="numero__nota" id="nota-paineis">previstos</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="faixa">
-          <div class="faixa__item vidro vidro--fino">
-            <span class="faixa__icone"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-predio"/></svg></span>
+        <!-- ---------- Como os dados chegam até aqui ---------- -->
+        <section class="fluxo vidro vidro--xg" id="sobre" tabindex="-1" aria-labelledby="titulo-fluxo">
+          <div class="fluxo__cabecalho">
             <div>
-              <h2 class="faixa__titulo">DGSUAS</h2>
-              <p class="faixa__texto">Diretoria de Gestão do SUAS: organiza a rede, os serviços e a oferta da proteção social no município.</p>
+              <span class="rotulo">Como é feito</span>
+              <h2 class="secao-titulo" id="titulo-fluxo">Do registro do atendimento ao painel</h2>
+            </div>
+            <div class="fluxo__legenda">
+              <span class="selo"><span class="selo__ponto selo__ponto--azul"></span> DGSUAS</span>
+              <span class="selo"><span class="selo__ponto"></span> DPEI</span>
             </div>
           </div>
-          <div class="faixa__item faixa__item--verde vidro vidro--fino">
-            <span class="faixa__icone"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-lupa-dados"/></svg></span>
-            <div>
-              <h2 class="faixa__titulo">DPEI</h2>
-              <p class="faixa__texto">Departamento de Pesquisa, Estatística e Indicadores: produz, trata e publica os dados que alimentam os painéis.</p>
-            </div>
+
+          <ol class="fluxo__etapas" role="list">
+            <li class="etapa etapa--dgsuas">
+              <div class="etapa__marca">
+                <span class="etapa__numero">01</span>
+                <span class="etapa__orgao">DGSUAS</span>
+              </div>
+              <h3 class="etapa__titulo">Coleta</h3>
+              <p class="etapa__texto">Reunião dos registros das unidades e dos sistemas oficiais que alimentam a gestão do SUAS no município.</p>
+            </li>
+
+            <li class="etapa etapa--dgsuas">
+              <div class="etapa__marca">
+                <span class="etapa__numero">02</span>
+                <span class="etapa__orgao">DGSUAS</span>
+              </div>
+              <h3 class="etapa__titulo">Mineração e tratamento</h3>
+              <p class="etapa__texto">Extração, limpeza e conferência dos dados, resolvendo inconsistências antes de qualquer publicação.</p>
+            </li>
+
+            <li class="etapa etapa--dpei">
+              <div class="etapa__marca">
+                <span class="etapa__numero">03</span>
+                <span class="etapa__orgao">DPEI</span>
+              </div>
+              <h3 class="etapa__titulo">Armazenamento e pipeline</h3>
+              <p class="etapa__texto">Armazenamento, estruturação das bases e montagem do pipeline que mantém os dados atualizados.</p>
+            </li>
+
+            <li class="etapa etapa--dpei">
+              <div class="etapa__marca">
+                <span class="etapa__numero">04</span>
+                <span class="etapa__orgao">DPEI</span>
+              </div>
+              <h3 class="etapa__titulo">Painéis e publicação</h3>
+              <p class="etapa__texto">Criação e publicação dos dashboards em Tableau, além da manutenção deste site.</p>
+            </li>
+          </ol>
+
+          <div class="fluxo__nota">
+            <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-cadeado"/></svg>
+            <p>
+              Os painéis trazem <strong>apenas dados agregados</strong>, sem qualquer informação que
+              identifique pessoas, em conformidade com a LGPD. O acesso é livre e não exige cadastro.
+            </p>
           </div>
-          <div class="faixa__item faixa__item--amarelo vidro vidro--fino">
-            <span class="faixa__icone"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-escudo-ok"/></svg></span>
-            <div>
-              <h2 class="faixa__titulo">Dados abertos e LGPD</h2>
-              <p class="faixa__texto">Somente informações agregadas e sem dados pessoais, de acesso livre a qualquer cidadão.</p>
-            </div>
-          </div>
-        </div>
+        </section>
 
         <div class="secao-topo" id="temas" tabindex="-1">
           <div class="secao-topo__texto">
             <span class="rotulo">Navegue por eixo</span>
             <h2 class="secao-titulo">Temas e painéis</h2>
-            <p class="secao-descricao">Cada tema reúne os painéis do Power BI publicados pela SEMIAS. Clique em um painel para abrir dentro do Observatório.</p>
+            <p class="secao-descricao">Cada tema reúne os painéis publicados pela SEMIAS. Clique para abrir dentro do Observatório — ou pressione <kbd class="tecla">Ctrl K</kbd> e digite o nome.</p>
           </div>
           <div class="filtros" id="filtros" role="group" aria-label="Filtrar temas por eixo"></div>
         </div>
 
         <ul class="grade anima-entrada" id="grade-temas" role="list"></ul>
-        <p class="grade__vazio vidro vidro--fino" id="grade-vazia" hidden>Nenhum tema neste eixo.</p>
+        <p class="grade__vazio vidro vidro--leve" id="grade-vazia" hidden>Nenhum tema neste eixo.</p>
 
-        <div class="secao-topo" id="sobre" tabindex="-1">
-          <div class="secao-topo__texto">
-            <span class="rotulo">Como funciona</span>
-            <h2 class="secao-titulo">Sobre o Observatório</h2>
-          </div>
-        </div>
-
-        <div class="faixa">
-          <div class="faixa__item vidro vidro--fino">
-            <span class="faixa__icone"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-grafico"/></svg></span>
-            <div>
-              <h3 class="faixa__titulo">Painéis interativos</h3>
-              <p class="faixa__texto">Clique nos gráficos para filtrar, use a barra inferior de cada painel para trocar de página e o botão <strong>Tela cheia</strong> para ver os detalhes.</p>
-            </div>
-          </div>
-          <div class="faixa__item faixa__item--verde vidro vidro--fino">
-            <span class="faixa__icone"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-link"/></svg></span>
-            <div>
-              <h3 class="faixa__titulo">Endereço próprio</h3>
-              <p class="faixa__texto">Cada painel tem um link exclusivo. Use <strong>Copiar link</strong> para compartilhar exatamente o que está na tela.</p>
-            </div>
-          </div>
-          <div class="faixa__item faixa__item--amarelo vidro vidro--fino">
-            <span class="faixa__icone"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-relogio"/></svg></span>
-            <div>
-              <h3 class="faixa__titulo">Periodicidade</h3>
-              <p class="faixa__texto">A atualização segue o calendário de cada fonte (RMA, Cadastro Único, folha de benefícios e registros próprios da SEMIAS).</p>
-            </div>
-          </div>
-        </div>
-
-        <footer class="rodape vidro">
-          <p class="rodape__texto">
+        <footer class="rodape vidro vidro--xg">
+          <p class="rodape__texto" id="rodape-texto">
             <strong>Observatório SUAS</strong> — Secretaria Municipal de Inclusão e Assistência Social (SEMIAS),
-            Prefeitura de Porto Velho. Realização DGSUAS e DPEI — Departamento de Pesquisa, Estatística e Indicadores.<br>
-            © <span id="ano-atual">2026</span> Prefeitura de Porto Velho · Painéis publicados com Microsoft Power BI.
+            Prefeitura de Porto Velho.<br>
+            Coleta, mineração e tratamento dos dados: <strong>DGSUAS</strong>.
+            Armazenamento, pipeline, painéis e manutenção do site: <strong>DPEI</strong>.<br>
+            <span id="rodape-rodape">© <span id="ano-atual">2026</span> Prefeitura de Porto Velho · Painéis publicados em Tableau.</span>
           </p>
           <div class="rodape__marcas">
             <img src="assets/img/semias.png" alt="SEMIAS" width="1000" height="213" loading="lazy" decoding="async">
@@ -330,21 +350,21 @@
               <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-link"/></svg>
               <span class="acao__texto">Copiar link</span>
             </button>
-            <a class="acao" id="acao-nova-aba" href="#" target="_blank" rel="noopener noreferrer" title="Abrir no Power BI em nova aba">
-              <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-nova-aba"/></svg>
+            <a class="acao" id="acao-nova-aba" href="#" target="_blank" rel="noopener noreferrer" title="Abrir no Tableau em nova aba">
+              <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-externo"/></svg>
               <span class="acao__texto">Nova aba</span>
             </a>
             <button class="acao acao--principal" id="acao-tela-cheia" type="button" aria-pressed="false" title="Ver em tela cheia">
-              <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-tela-cheia"/></svg>
+              <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-expandir"/></svg>
               <span class="acao__texto">Tela cheia</span>
             </button>
           </div>
           <h1 class="contexto__titulo" id="titulo-painel" tabindex="-1" data-foco>Painel</h1>
         </div>
 
-        <nav class="abas vidro vidro--fino" id="abas" aria-label="Painéis deste tema" hidden></nav>
+        <nav class="abas vidro vidro--leve" id="abas" aria-label="Painéis deste tema" hidden></nav>
 
-        <div class="palco-moldura vidro" id="palco-moldura">
+        <div class="palco-moldura vidro vidro--xg" id="palco-moldura">
           <div class="palco" id="palco">
             <div class="carregando" id="carregando" role="status">
               <div class="esqueleto" aria-hidden="true">
@@ -362,10 +382,10 @@
             </div>
 
             <div class="aviso" id="aviso-lentidao" role="status" hidden>
-              <p><strong>O painel está demorando para carregar.</strong><br>A conexão pode estar lenta ou o Power BI indisponível no momento.</p>
+              <p><strong>O painel está demorando para carregar.</strong><br>A conexão pode estar lenta ou o Tableau indisponível no momento.</p>
               <a class="botao botao--principal" id="aviso-nova-aba" href="#" target="_blank" rel="noopener noreferrer">
-                Abrir direto no Power BI
-                <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-nova-aba"/></svg>
+                Abrir direto no Tableau
+                <svg class="icone" aria-hidden="true" focusable="false"><use href="#i-externo"/></svg>
               </a>
             </div>
 
@@ -373,8 +393,8 @@
               <div class="pendente__caixa">
                 <span class="pendente__icone"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-alerta"/></svg></span>
                 <h2>Painel ainda não publicado</h2>
-                <p>Este painel já está previsto na estrutura do Observatório, mas o link do Power BI ainda não foi informado.</p>
-                <p>Para publicá-lo, adicione o endereço em <code>assets/js/catalogo.js</code>.</p>
+                <p>Este painel já está previsto na estrutura do Observatório, mas o endereço do Tableau ainda não foi informado.</p>
+                <p>Para publicá-lo, adicione o link em <code>assets/js/catalogo.js</code>.</p>
               </div>
             </div>
           </div>
@@ -383,7 +403,7 @@
 
       <!-- ---------- Rota inexistente ---------- -->
       <section class="vista vista--vazia" id="vista-nao-encontrado" aria-labelledby="titulo-404" hidden>
-        <div class="estado-vazio vidro">
+        <div class="estado-vazio vidro vidro--xg">
           <p class="estado-vazio__codigo" aria-hidden="true">404</p>
           <h1 id="titulo-404" tabindex="-1" data-foco>Painel não encontrado</h1>
           <p>O endereço pode ter mudado ou o painel foi removido. Procure pelo tema no menu ou volte ao início.</p>
@@ -398,7 +418,7 @@
 
   <!-- ===================== GAVETA (mobile) ===================== -->
   <div class="scrim" id="scrim" hidden></div>
-  <aside class="gaveta" id="gaveta" aria-label="Menu de temas" hidden>
+  <aside class="gaveta" id="gaveta" role="dialog" aria-modal="true" aria-label="Menu de temas" hidden>
     <div class="gaveta__cabecalho">
       <span class="rotulo">Temas do SUAS</span>
       <button class="botao-icone" id="fechar-gaveta" type="button" aria-label="Fechar menu">
