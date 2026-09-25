@@ -121,6 +121,15 @@ A versão publicada anteriormente tinha um arquivo solto chamado **`lll`** na ra
 criado por engano. Pode apagar: no GitHub, abra o arquivo › ícone de lixeira ›
 *Commit changes*.
 
+### Se alguma imagem aparecer quebrada
+
+Os logos da página não dependem mais de arquivos — estão embutidos no CSS. Se ainda
+assim algo não carregar, confira se a pasta `assets/` subiu inteira: abra
+`https://SEU-USUARIO.github.io/SEU-REPOSITORIO/assets/img/og-image.png` no navegador.
+Se der 404, o envio pelo site do GitHub deixou arquivos para trás — refaça o upload
+dessa pasta (*Add file › Upload files*, arrastando a pasta `assets` inteira) ou use
+o terminal com `git add . && git commit && git push`, que nunca perde arquivo.
+
 ## Testar no computador antes de publicar
 
 Abrir o `index.html` com dois cliques já mostra o site (apenas a fonte Inter é
@@ -141,6 +150,7 @@ python -m http.server 8000
 | Vidro | *Liquid glass* em quatro camadas: refração (`backdrop-filter`), lente na borda (desfoque extra com máscara radial), brilho especular e aro de 1px em gradiente com `mask-composite`. Técnica aberta, igual à usada pelas bibliotecas de liquid glass do 21st.dev (MIT). |
 | Ícones | Conjunto linear (outline) próprio: grade de 24 px, traço 1,5, terminações arredondadas, sem preenchimento e sem biblioteca externa. |
 | Tipografia | Inter variável, hospedada no próprio site. |
+| Logos | Brasão, símbolo e marca da SEMIAS ficam **embutidos em base64** no início do `styles.css` (variáveis `--logo-simbolo`, `--logo-brasao`, `--logo-semias`). Assim nunca aparecem quebrados se um arquivo deixar de subir. Os PNGs continuam em `assets/img/` como referência. |
 | Textura | Grão fino em SVG sobre o fundo, para as superfícies grandes não ficarem "chapadas". |
 
 Para mudar qualquer cor ou a intensidade do vidro, edite apenas o bloco `:root` no
